@@ -16,6 +16,7 @@ function [J grad] = nnCostFunction(nn_params, ...
 
 % Reshape nn_params back into the parameters Theta1 and Theta2, the weight matrices
 % for our 2 layer neural network
+% size(nn_params)
 Theta1 = reshape(nn_params(1:hidden_layer_size * (input_layer_size + 1)), ...
                  hidden_layer_size, (input_layer_size + 1));
 
@@ -24,6 +25,7 @@ Theta2 = reshape(nn_params((1 + (hidden_layer_size * (input_layer_size + 1))):en
 
 % Setup some useful variables
 m = size(X, 1);
+K = num_labels;
          
 % You need to return the following variables correctly 
 J = 0;
@@ -62,30 +64,55 @@ Theta2_grad = zeros(size(Theta2));
 %               and Theta2_grad from Part 2.
 %
 
+% PART 1
+a1 = [ones(size(X,1),1),X];
+z2 = a1 * Theta1';
+a2 = sigmoid(z2);
+a2 = [ones(size(a2,1),1), a2];
+z3 = a2 * Theta2';
+a3 = sigmoid(z3);
+h = a3;
 
+Y = zeros(size(y, 1), K);
+for i=1:K
+  Y(1:end, i) = (y == i);
+end
 
+J = 1 / m * sum(sum(-Y .* log(h) - (1-Y) .* log(1-h)));
+reg = lambda / 2 / m * (sum(Theta1(:,2:end)(:).^2) + sum(Theta2(:,2:end)(:).^2));
+J = J + reg;
 
+% PART 2
 
+for t=1:m
+  % feedforward pass
+  a1 = [1; X(t,:)'];
+  z2 = Theta1 * a1;
+  a2 = [1; sigmoid(z2)];  % 25 x 1
+  z3 = Theta2 * a2;
+  a3 = sigmoid(z3); % 10 x 1
 
+	yy = ([1:num_labels]==y(t))';
 
+  % backward pass
+  delta3 = a3 - yy; % 10 x 1
+  delta2 = (Theta2' * delta3) .* [1; sigmoidGradient(z2)]; % 25 x 1
+  delta2 = delta2(2:end);
 
+  Theta1_grad = Theta1_grad + delta2 * a1';
+  Theta2_grad = Theta2_grad + delta3 * a2';
+end
 
+Theta1_grad = 1 / m * Theta1_grad;
+Theta2_grad = 1 / m * Theta2_grad;
+reg1 = (lambda/m) * [zeros(size(Theta1, 1), 1), Theta1(:,2:end)];
+reg2 = (lambda/m) * [zeros(size(Theta2, 1), 1), Theta2(:,2:end)];
 
-
-
-
-
-
-
-
-
-
-% -------------------------------------------------------------
-
+Theta1_grad = Theta1_grad + reg1;
+Theta2_grad = Theta2_grad + reg2;
 % =========================================================================
 
 % Unroll gradients
 grad = [Theta1_grad(:) ; Theta2_grad(:)];
-
 
 end
