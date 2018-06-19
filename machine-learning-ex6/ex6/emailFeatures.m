@@ -48,12 +48,8 @@ x = zeros(n, 1);
 %
 %
 
-
-
-
-
-
-
+unq_word_indices = unique(word_indices);
+x(unq_word_indices) = 1;
 
 % =========================================================================
     
